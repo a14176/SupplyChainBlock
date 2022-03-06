@@ -17,6 +17,7 @@ App = {
     retailerID: "0x0000000000000000000000000000000000000000",
     consumerID: "0x0000000000000000000000000000000000000000",
 
+    
     init: async function () {
         App.readForm();
         /// Setup access to blockchain
@@ -58,6 +59,13 @@ App = {
     initWeb3: async function () {
         /// Find or Inject Web3 Provider
         /// Modern dapp browsers...
+        // if (window.ethereum) {
+        //     try {
+        //         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        //     } catch (error) {
+        //         console.error("User denied account access");
+        //     }
+        // }
         if (window.ethereum) {
             App.web3Provider = window.ethereum;
             try {
@@ -65,7 +73,7 @@ App = {
                 await window.ethereum.enable();
             } catch (error) {
                 // User denied account access...
-                console.error("User denied account access")
+                console.error("User denied account access");
             }
         }
         // Legacy dapp browsers...
@@ -91,8 +99,9 @@ App = {
                 console.log('Error:',err);
                 return;
             }
-            console.log('getMetaskID:',res);
-            App.metamaskAccountID = res[0];
+            //console.log('getMetaskID1:',res);
+            App.metamaskAccountID = web3.toChecksumAddress(res[0]);
+            console.log('getMetaskID:',App.metamaskAccountID);
 
         })
     },
@@ -100,7 +109,8 @@ App = {
     initSupplyChain: function () {
         /// Source the truffle compiled smart contracts
         var jsonSupplyChain='../../build/contracts/SupplyChain.json';
-        
+        web3.eth.defaultAccount = web3.eth.accounts[0];
+
         /// JSONfy the smart contracts
         $.getJSON(jsonSupplyChain, function(data) {
             console.log('data',data);
@@ -119,6 +129,53 @@ App = {
 
     bindEvents: function() {
         $(document).on('click', App.handleButtonClick);
+
+        $("#setFarmer").on("click", function (e) {
+            const farmerAddress = $("#originFarmerID").val();
+            App.contracts.SupplyChain.deployed().then(function(instance) {
+                return instance.addFarmer(farmerAddress,{from: App.metamaskAccountID});
+            }).then(function(result) {
+                console.log('addFarmer:',result);
+            }).catch(function(err) {
+                console.log('addFarmer:',err.message);
+            });
+
+        });
+
+        $("#setDist").on("click", function (e) {
+            const distributorAddress = $("#distributorID").val();
+            App.contracts.SupplyChain.deployed().then(function(instance) {
+                return instance.addDistributor(distributorAddress,{from: App.metamaskAccountID});
+            }).then(function(result) {
+                console.log('addDistributor:',result);
+            }).catch(function(err) {
+                console.log('addDistributor:',err.message);
+            });
+        });
+
+        $("#setRetailer").on("click", function (e) {
+            const retailerAddress = $("#retailerID").val();
+            App.contracts.SupplyChain.deployed().then(function(instance) {
+                return instance.addRetailer(retailerAddress,{from: App.metamaskAccountID});
+            }).then(function(result) {
+                console.log('addRetailer:',result);
+            }).catch(function(err) {
+                console.log('addRetailer:',err.message);
+            });
+        });
+
+        $("#setConsumer").on("click", function (e) {
+            const customerAddress = $("#consumerID").val();
+
+            App.contracts.SupplyChain.deployed().then(function(instance) {
+                return instance.addConsumer(customerAddress,{from: App.metamaskAccountID});
+            }).then(function(result) {
+                console.log('addConsumer:',result);
+            }).catch(function(err) {
+                console.log('addConsumer:',err.message);
+            });
+        });
+      
     },
 
     handleButtonClick: async function(event) {
